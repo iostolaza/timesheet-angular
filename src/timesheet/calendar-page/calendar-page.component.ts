@@ -1,4 +1,5 @@
 // src/app/timesheet/calendar-page/calendar-page.component.ts
+
 import { Component, OnInit, Inject } from '@angular/core';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventInput } from '@fullcalendar/core';
@@ -8,15 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { TimesheetFormDialogComponent } from '../timesheet-form/timesheet-form.component';
 import { TimesheetService } from '../../app/core/services/timesheet.service';
 import { CommonModule } from '@angular/common';
-
-interface TimesheetEntry {
-  id: string;
-  date: string;
-  hours: number;
-  description: string;
-  accountId: string;
-  timesheetId: string;
-}
+import { TimesheetEntry } from '../../app/core/models/timesheet.model';
 
 @Component({
   selector: 'app-calendar-page',

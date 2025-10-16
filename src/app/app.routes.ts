@@ -1,33 +1,46 @@
+
 // src/app/app.routes.ts
-import { Routes } from '@angular/router';
-import { AuthComponent } from '../app/timesheet/auth/auth.component';
+
+import { AuthComponent } from './core/auth/auth.component';
 import { StartPageComponent } from '../timesheet/start-page/start-page.component';
 import { CalendarPageComponent } from '../timesheet/calendar-page/calendar-page.component';
 import { ReviewPageComponent } from '../timesheet/review-page/review-page.component';
 import { TimesheetComponent } from '../timesheet/timesheet.component';
 import { AuthService } from '../app/core/services/auth.service';
+import { Routes, CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { map } from 'rxjs';
+import { Router } from '@angular/router';
+
+
+const authGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return inject(AuthService).getCurrentUser().pipe(
+    map(isAuthenticated => isAuthenticated || router.createUrlTree(['/auth']))
+  );
+};
 
 export const routes: Routes = [
   { path: 'auth', component: AuthComponent },
   {
     path: '',
     component: StartPageComponent,
-    canActivate: [() => AuthService.isAuthenticated()]
+    canActivate: [authGuard]
   },
   {
     path: 'calendar',
     component: CalendarPageComponent,
-    canActivate: [() => AuthService.isAuthenticated()]
+    canActivate: [authGuard]
   },
   {
     path: 'review',
     component: ReviewPageComponent,
-    canActivate: [() => AuthService.isAuthenticated()]
+    canActivate: [authGuard]
   },
   {
     path: 'timesheet',
     component: TimesheetComponent,
-    canActivate: [() => AuthService.isAuthenticated()]
+    canActivate: [authGuard]
   },
   { path: '**', redirectTo: 'auth' }
 ];

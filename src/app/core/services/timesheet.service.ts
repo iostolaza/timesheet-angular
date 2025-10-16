@@ -1,152 +1,73 @@
 // src/app/core/services/timesheet.service.ts
 import { Injectable } from '@angular/core';
-import { API } from '@aws-amplify/api';
-import { gql } from 'graphql-tag';
+import { v4 as uuidv4 } from 'uuid';
 import { Timesheet, TimesheetEntry, Account } from '../models/timesheet.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TimesheetService {
+  private timesheets: Timesheet[] = JSON.parse(localStorage.getItem('timesheets') || '[]');
+  private accounts: Account[] = [
+    { id: 'acc1', name: 'Client A' },
+    { id: 'acc2', name: 'Client B' }
+  ];
+
   async createTimesheet(): Promise<string> {
-    try {
-      const mutation = gql`
-        mutation CreateTimesheet($input: CreateTimesheetInput!) {
-          createTimesheet(input: $input) {
-            id
-          }
-        }
-      `;
-      const result = await API.graphql({
-        query: mutation,
-        variables: { input: { status: 'draft', totalHours: 0, totalCost: 0 } }
-      }) as any;
-      return result.data.createTimesheet.id;
-    } catch (error) {
-      console.error('Error creating timesheet:', error);
-      throw error;
-    }
+    const id = uuidv4();
+    const timesheet: Timesheet = { id, status: 'draft', entries: [], totalHours: 0, totalCost: 0, owner: 'user1' };
+    this.timesheets.push(timesheet);
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
+    return id;
   }
 
   async getTimesheets(status?: string): Promise<Timesheet[]> {
-    try {
-      const query = gql`
-        query ListTimesheets($status: String) {
-          listTimesheets(status: $status) {
-            id
-            status
-            entries {
-              id
-              date
-              hours
-              description
-              accountId
-              document
-            }
-            totalHours
-            totalCost
-            rejectionReason
-            owner
-          }
-        }
-      `;
-      const result = await API.graphql({ query, variables: { status } }) as any;
-      return result.data.listTimesheets;
-    } catch (error) {
-      console.error('Error fetching timesheets:', error);
-      throw error;
-    }
+    return status ? this.timesheets.filter(t => t.status === status) : this.timesheets;
   }
 
-  async addEntry(entry: TimesheetEntry): Promise<void> {
-    try {
-      const mutation = gql`
-        mutation AddTimesheetEntry($input: TimesheetEntryInput!) {
-          addTimesheetEntry(input: $input) {
-            id
-            date
-            hours
-            description
-            accountId
-            timesheetId
-            document
-          }
-        }
-      `;
-      await API.graphql({ query: mutation, variables: { input: entry } });
-    } catch (error) {
-      console.error('Error adding entry:', error);
-      throw error;
-    }
+  async addEntry(entry: Omit<TimesheetEntry, 'id'>): Promise<void> {
+    const timesheet = this.timesheets.find(t => t.id === entry.timesheetId);
+    if (!timesheet) throw new Error('Timesheet not found');
+    const newEntry: TimesheetEntry = { ...entry, id: uuidv4() };
+    timesheet.entries.push(newEntry);
+    timesheet.totalHours = timesheet.entries.reduce((sum, e) => sum + e.hours, 0);
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
+  }
+
+  async updateEntry(entry: TimesheetEntry): Promise<void> {
+    const timesheet = this.timesheets.find(t => t.id === entry.timesheetId);
+    if (!timesheet) throw new Error('Timesheet not found');
+    const index = timesheet.entries.findIndex(e => e.id === entry.id);
+    if (index === -1) throw new Error('Entry not found');
+    timesheet.entries[index] = entry;
+    timesheet.totalHours = timesheet.entries.reduce((sum, e) => sum + e.hours, 0);
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
   }
 
   async submitTimesheet(timesheetId: string): Promise<void> {
-    try {
-      const mutation = gql`
-        mutation SubmitTimesheet($id: ID!) {
-          submitTimesheet(id: $id) {
-            id
-            status
-          }
-        }
-      `;
-      await API.graphql({ query: mutation, variables: { id: timesheetId } });
-    } catch (error) {
-      console.error('Error submitting timesheet:', error);
-      throw error;
-    }
+    const timesheet = this.timesheets.find(t => t.id === timesheetId);
+    if (!timesheet) throw new Error('Timesheet not found');
+    timesheet.status = 'submitted';
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
   }
 
   async approveTimesheet(timesheetId: string, entries: TimesheetEntry[]): Promise<void> {
-    try {
-      const mutation = gql`
-        mutation ApproveTimesheet($id: ID!, $entries: [TimesheetEntryInput!]!) {
-          approveTimesheet(id: $id, entries: $entries) {
-            id
-            status
-          }
-        }
-      `;
-      await API.graphql({ query: mutation, variables: { id: timesheetId, entries } });
-    } catch (error) {
-      console.error('Error approving timesheet:', error);
-      throw error;
-    }
+    const timesheet = this.timesheets.find(t => t.id === timesheetId);
+    if (!timesheet) throw new Error('Timesheet not found');
+    timesheet.status = 'approved';
+    timesheet.entries = entries;
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
   }
 
   async rejectTimesheet(timesheetId: string, rejectionReason: string): Promise<void> {
-    try {
-      const mutation = gql`
-        mutation RejectTimesheet($id: ID!, $rejectionReason: String!) {
-          rejectTimesheet(id: $id, rejectionReason: $rejectionReason) {
-            id
-            status
-            rejectionReason
-          }
-        }
-      `;
-      await API.graphql({ query: mutation, variables: { id: timesheetId, rejectionReason } });
-    } catch (error) {
-      console.error('Error rejecting timesheet:', error);
-      throw error;
-    }
+    const timesheet = this.timesheets.find(t => t.id === timesheetId);
+    if (!timesheet) throw new Error('Timesheet not found');
+    timesheet.status = 'rejected';
+    timesheet.rejectionReason = rejectionReason;
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
   }
 
   async getAccounts(): Promise<Account[]> {
-    try {
-      const query = gql`
-        query ListAccounts {
-          listAccounts {
-            id
-            name
-          }
-        }
-      `;
-      const result = await API.graphql({ query }) as any;
-      return result.data.listAccounts;
-    } catch (error) {
-      console.error('Error fetching accounts:', error);
-      throw error;
-    }
+    return this.accounts;
   }
 }

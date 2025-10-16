@@ -1,38 +1,33 @@
 // src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import Auth from '@aws-amplify/auth';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  static async isAuthenticated(): Promise<boolean> {
-    try {
-      await Auth.currentAuthenticatedUser();
-      return true;
-    } catch {
-      return false;
-    }
+  private isAuthenticated = new BehaviorSubject<boolean>(false);
+
+  constructor() {
+    const token = localStorage.getItem('mockToken');
+    this.isAuthenticated.next(!!token);
   }
 
-  async getCurrentUser(): Promise<{ username: string; isManager: boolean } | null> {
-    try {
-      const user = await Auth.currentAuthenticatedUser();
-      return {
-        username: user.username,
-        isManager: user.signInUserSession?.accessToken?.payload['cognito:groups']?.includes('Managers') || false
-      };
-    } catch {
-      return null;
-    }
+  login(username: string, password: string): Promise<{ username: string }> {
+    console.log(`Mock login for ${username}`);
+    localStorage.setItem('mockToken', 'fake-jwt-token');
+    this.isAuthenticated.next(true);
+    return Promise.resolve({ username });
   }
 
-  async signOut(): Promise<void> {
-    try {
-      await Auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
+  signOut(): Promise<void> {
+    console.log('Mock logout');
+    localStorage.removeItem('mockToken');
+    this.isAuthenticated.next(false);
+    return Promise.resolve();
+  }
+
+  getCurrentUser(): Observable<boolean> {
+    return this.isAuthenticated.asObservable();
   }
 }

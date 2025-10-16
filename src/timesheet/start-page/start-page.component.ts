@@ -1,5 +1,7 @@
+
 // src/app/timesheet/start-page/start-page.component.ts
-import { Component, Inject } from '@angular/core';
+
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../app/core/services/auth.service';
 
@@ -10,7 +12,7 @@ import { AuthService } from '../../app/core/services/auth.service';
   templateUrl: './start-page.component.html'
 })
 export class StartPageComponent {
-  constructor(@Inject(AuthService) private authService: AuthService) {}
+  private authService = inject(AuthService);
 
   async logout() {
     await this.authService.signOut();

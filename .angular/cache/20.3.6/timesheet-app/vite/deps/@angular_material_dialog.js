@@ -11,13 +11,13 @@ import {
   createBlockScrollStrategy,
   createGlobalPositionStrategy,
   createOverlayRef
-} from "./chunk-I7X5YRDP.js";
+} from "./chunk-OI3DZ43F.js";
 import {
   CdkScrollable
-} from "./chunk-WV7IXPEK.js";
+} from "./chunk-CHRGXUHH.js";
 import {
   _animationsDisabled
-} from "./chunk-EFNR3N2O.js";
+} from "./chunk-GJTENUBT.js";
 import {
   A11yModule,
   ESCAPE,
@@ -28,17 +28,17 @@ import {
   _IdGenerator,
   _getFocusedElementPierceShadowDom,
   hasModifierKey
-} from "./chunk-D22AOGJ5.js";
-import "./chunk-23AHE3MM.js";
+} from "./chunk-2KK5PQDD.js";
 import "./chunk-5EG33CFQ.js";
+import {
+  Directionality
+} from "./chunk-FYFKZWVI.js";
+import "./chunk-D4UC6TBX.js";
 import {
   Platform,
   coerceNumberProperty
-} from "./chunk-VISU6CW7.js";
-import {
-  Directionality
-} from "./chunk-YSAANADY.js";
-import "./chunk-KDVPDAY4.js";
+} from "./chunk-TN2VERNV.js";
+import "./chunk-HHVV2CRJ.js";
 import "./chunk-CBAS7KCW.js";
 import {
   ChangeDetectionStrategy,
@@ -55,21 +55,13 @@ import {
   NgModule,
   NgZone,
   Renderer2,
-  Subject,
   TemplateRef,
   ViewChild,
   ViewEncapsulation,
-  __spreadProps,
-  __spreadValues,
   afterNextRender,
-  defer,
-  filter,
   inject,
-  merge,
   setClassMetadata,
   signal,
-  startWith,
-  take,
   ɵɵHostDirectivesFeature,
   ɵɵInheritDefinitionFeature,
   ɵɵNgOnChangesFeature,
@@ -89,7 +81,19 @@ import {
   ɵɵqueryRefresh,
   ɵɵtemplate,
   ɵɵviewQuery
-} from "./chunk-ZQUULPBB.js";
+} from "./chunk-G4S5Z4WJ.js";
+import {
+  Subject,
+  defer,
+  filter,
+  merge,
+  startWith,
+  take
+} from "./chunk-RSS3ODKE.js";
+import {
+  __spreadProps,
+  __spreadValues
+} from "./chunk-GOMI4DH3.js";
 
 // node_modules/@angular/cdk/fesm2022/dialog.mjs
 function CdkDialogContainer_ng_template_0_Template(rf, ctx) {

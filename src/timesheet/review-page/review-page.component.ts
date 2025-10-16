@@ -1,49 +1,46 @@
 
 // src/app/timesheet/review-page/review-page.component.ts
 
-import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { Component, OnInit, inject } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatTableModule } from '@angular/material/table';
 import { CommonModule } from '@angular/common';
+import { TimesheetService } from '../../app/core/services/timesheet.service';
+import { Timesheet } from '../../app/core/models/timesheet.model';
+import { ReviewFormComponent } from '../review-form/review-form.component';
 
 @Component({
-  selector: 'app-review-dialog',
+  selector: 'app-review-page',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, CommonModule],
+  imports: [MatDialogModule, MatButtonModule, MatTableModule, CommonModule],
   templateUrl: './review-page.component.html'
 })
-export class ReviewPageComponent {
-  reviewForm: FormGroup;
+export class ReviewPageComponent implements OnInit {
+  displayedColumns: string[] = ['id', 'status', 'totalHours', 'actions'];
+  timesheets: Timesheet[] = [];
+  private timesheetService = inject(TimesheetService);
+  private dialog = inject(MatDialog);
 
-  constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ReviewPageComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { timesheet: any }
-  ) {
-    this.reviewForm = this.fb.group({
-      approved: [true],
-      rejectionReason: ['', [this.rejectionReasonValidator.bind(this)]]
+  async ngOnInit() {
+    this.timesheets = await this.timesheetService.getTimesheets('submitted');
+  }
+
+  openReviewForm(timesheet: Timesheet): void {
+    const dialogRef = this.dialog.open(ReviewFormComponent, {
+      width: '400px',
+      data: { timesheet }
     });
-  }
 
-  rejectionReasonValidator(control: import('@angular/forms').AbstractControl) {
-    const approved = this.reviewForm?.get('approved')?.value;
-    if (!approved && !control.value) {
-      return { required: true };
-    }
-    return null;
-  }
-
-  onSubmit() {
-    if (this.reviewForm.valid) {
-      this.dialogRef.close(this.reviewForm.value);
-    }
-  }
-
-  onCancel() {
-    this.dialogRef.close();
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        if (result.approved) {
+          await this.timesheetService.approveTimesheet(timesheet.id, timesheet.entries);
+        } else {
+          await this.timesheetService.rejectTimesheet(timesheet.id, result.rejectionReason);
+        }
+        this.timesheets = await this.timesheetService.getTimesheets('submitted');
+      }
+    });
   }
 }

@@ -1,4 +1,6 @@
+
 // src/app/timesheet/timesheet.component.ts
+
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,22 +8,13 @@ import { MatTableModule } from '@angular/material/table';
 import { TimesheetFormDialogComponent } from './timesheet-form/timesheet-form.component';
 import { DocumentViewDialogComponent } from './document-view/document-view.component';
 import { TimesheetService } from '../app/core/services/timesheet.service';
-import { AuthService } from '../app/core/services/auth.service';
-
-interface TimesheetEntry {
-  id: string;
-  date: string;
-  hours: number;
-  description: string;
-  accountId: string;
-  timesheetId: string;
-  document?: string;
-}
+import { TimesheetEntry } from '../app/core/models/timesheet.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-timesheet',
   standalone: true,
-  imports: [MatDialogModule, MatButtonModule, MatTableModule],
+  imports: [MatDialogModule, MatButtonModule, MatTableModule, CommonModule],
   templateUrl: './timesheet.component.html'
 })
 export class TimesheetComponent implements OnInit {
@@ -80,8 +73,8 @@ export class TimesheetComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(async result => {
       if (result && this.currentTimesheetId) {
-        await this.timesheetService.addEntry({
-          id: entry.id,
+        await this.timesheetService.updateEntry({
+          id: entry.id, // Use existing ID
           date: result.date,
           hours: result.hours,
           description: result.description,
