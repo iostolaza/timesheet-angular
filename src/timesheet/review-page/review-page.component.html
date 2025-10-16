@@ -1,16 +1,16 @@
-<!-- src/timesheet/review-page/review-page.component.html -->
-<div class="p-4">
-  <h2 mat-dialog-title class="text-2xl font-bold">Review Timesheet</h2>
+<!-- src/app/timesheet/review-page/review-page.component.html -->
+<div class="dialog">
+  <h2 mat-dialog-title>Review Timesheet</h2>
   <mat-dialog-content>
     <form [formGroup]="reviewForm" class="space-y-4">
       <div class="flex items-center gap-4">
         <label class="text-gray-700">Approve</label>
         <input type="checkbox" formControlName="approved" class="toggle toggle-primary">
       </div>
-      <mat-form-field appearance="fill" class="w-full" *ngIf="!reviewForm.get('approved')?.value">
+      <mat-form-field appearance="fill" class="form-field" *ngIf="!reviewForm.get('approved')?.value">
         <mat-label>Rejection Reason</mat-label>
         <textarea matInput formControlName="rejectionReason"></textarea>
-        <mat-error *ngIf="reviewForm.get('rejectionReason')?.hasError('required')">Rejection reason is required</mat-error>
+        <mat-error *ngIf="reviewForm.get('rejectionReason')?.hasError('required')" class="error">Rejection reason is required</mat-error>
       </mat-form-field>
     </form>
   </mat-dialog-content>

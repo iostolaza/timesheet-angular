@@ -1,19 +1,18 @@
-// src/app/components/start-page/start-page.component.ts
-import { Component } from '@angular/core';
+// src/app/timesheet/start-page/start-page.component.ts
+import { Component, Inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '@aws-amplify/auth-angular';
+import { AuthService } from '../../app/core/services/auth.service';
 
 @Component({
   selector: 'app-start-page',
   standalone: true,
   imports: [RouterLink],
-  templateUrl: './start-page.component.html',
-  styleUrls: ['./start-page.component.css']
+  templateUrl: './start-page.component.html'
 })
 export class StartPageComponent {
-  constructor(private authService: AuthService) {}
+  constructor(@Inject(AuthService) private authService: AuthService) {}
 
-  logout() {
-    this.authService.signOut();
+  async logout() {
+    await this.authService.signOut();
   }
 }

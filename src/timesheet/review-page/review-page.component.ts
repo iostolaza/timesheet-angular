@@ -1,5 +1,6 @@
 
-// src/timesheet/review-page/review-page.component.ts
+// src/app/timesheet/review-page/review-page.component.ts
+
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -12,21 +13,28 @@ import { CommonModule } from '@angular/common';
   selector: 'app-review-dialog',
   standalone: true,
   imports: [ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, CommonModule],
-  templateUrl: './review-page.component.html',
-//   styleUrls: ['./review-dialog.component.css']
+  templateUrl: './review-page.component.html'
 })
-export class ReviewDialogComponent {
+export class ReviewPageComponent {
   reviewForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ReviewDialogComponent>,
+    public dialogRef: MatDialogRef<ReviewPageComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { timesheet: any }
   ) {
     this.reviewForm = this.fb.group({
       approved: [true],
-      rejectionReason: ['']
+      rejectionReason: ['', [this.rejectionReasonValidator.bind(this)]]
     });
+  }
+
+  rejectionReasonValidator(control: import('@angular/forms').AbstractControl) {
+    const approved = this.reviewForm?.get('approved')?.value;
+    if (!approved && !control.value) {
+      return { required: true };
+    }
+    return null;
   }
 
   onSubmit() {

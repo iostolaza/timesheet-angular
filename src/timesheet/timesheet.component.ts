@@ -1,16 +1,20 @@
 // src/app/timesheet/timesheet.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { TimesheetFormDialogComponent } from './timesheet-form/timesheet-form.component';
 import { DocumentViewDialogComponent } from './document-view/document-view.component';
+import { TimesheetService } from '../app/core/services/timesheet.service';
+import { AuthService } from '../app/core/services/auth.service';
 
 interface TimesheetEntry {
-  id: number;
+  id: string;
   date: string;
   hours: number;
   description: string;
+  accountId: string;
+  timesheetId: string;
   document?: string;
 }
 
@@ -18,33 +22,52 @@ interface TimesheetEntry {
   selector: 'app-timesheet',
   standalone: true,
   imports: [MatDialogModule, MatButtonModule, MatTableModule],
-  templateUrl: './timesheet.component.html',
-//   styleUrls: ['./timesheet.component.css']
+  templateUrl: './timesheet.component.html'
 })
 export class TimesheetComponent implements OnInit {
   displayedColumns: string[] = ['date', 'hours', 'description', 'actions'];
-  timesheetEntries: TimesheetEntry[] = [
-    { id: 1, date: '2025-10-14', hours: 8, description: 'Client meeting', document: 'meeting_notes.pdf' },
-    { id: 2, date: '2025-10-15', hours: 6, description: 'Project development' }
-  ];
+  timesheetEntries: TimesheetEntry[] = [];
+  currentTimesheetId: string | null = null;
 
-  constructor(public dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    @Inject(TimesheetService) private timesheetService: TimesheetService
+  ) {}
 
-  ngOnInit() {}
+  async ngOnInit() {
+    this.currentTimesheetId = await this.timesheetService.createTimesheet();
+    this.loadTimesheetEntries();
+  }
+
+  async loadTimesheetEntries() {
+    const timesheets = await this.timesheetService.getTimesheets('draft');
+    this.timesheetEntries = timesheets
+      .filter(ts => ts.id === this.currentTimesheetId)
+      .flatMap(ts =>
+        (ts.entries || []).map(entry => ({
+          ...entry,
+          timesheetId: ts.id
+        }))
+      );
+  }
 
   openAddDialog(): void {
+    if (!this.currentTimesheetId) return;
     const dialogRef = this.dialog.open(TimesheetFormDialogComponent, {
       width: '400px',
       data: { mode: 'add' }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.timesheetEntries.push({
-          id: this.timesheetEntries.length + 1,
-          ...result
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result && this.currentTimesheetId) {
+        await this.timesheetService.addEntry({
+          date: result.date,
+          hours: result.hours,
+          description: result.description,
+          accountId: result.accountId,
+          timesheetId: this.currentTimesheetId
         });
-        this.timesheetEntries = [...this.timesheetEntries];
+        this.loadTimesheetEntries();
       }
     });
   }
@@ -55,11 +78,17 @@ export class TimesheetComponent implements OnInit {
       data: { mode: 'edit', entry }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const index = this.timesheetEntries.findIndex(e => e.id === entry.id);
-        this.timesheetEntries[index] = { id: entry.id, ...result };
-        this.timesheetEntries = [...this.timesheetEntries];
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result && this.currentTimesheetId) {
+        await this.timesheetService.addEntry({
+          id: entry.id,
+          date: result.date,
+          hours: result.hours,
+          description: result.description,
+          accountId: result.accountId,
+          timesheetId: this.currentTimesheetId
+        });
+        this.loadTimesheetEntries();
       }
     });
   }

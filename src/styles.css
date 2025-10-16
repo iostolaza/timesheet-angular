@@ -3,26 +3,53 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-body {
-  @apply bg-gray-100 min-h-screen font-sans;
+@layer base {
+  body {
+    @apply bg-gray-100 min-h-screen font-sans;
+  }
+  h1 {
+    @apply text-3xl font-bold text-gray-900 mb-6;
+  }
+  h2 {
+    @apply text-2xl font-semibold text-gray-900;
+  }
 }
 
-.container {
-  @apply max-w-7xl mx-auto p-6;
-}
-
-.btn {
-  @apply px-4 py-2 rounded-md font-medium;
-}
-
-.card {
-  @apply bg-white shadow-md rounded-lg p-6;
-}
-
-table {
-  @apply w-full bg-white shadow-md rounded-lg;
-}
-
-th, td {
-  @apply p-4 text-left;
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto p-6;
+  }
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors;
+  }
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  .btn-outline {
+    @apply border border-gray-300 text-gray-700 hover:bg-gray-100;
+  }
+  .btn-error {
+    @apply border border-red-500 text-red-500 hover:bg-red-100;
+  }
+  .card {
+    @apply bg-white shadow-md rounded-lg p-6;
+  }
+  .table {
+    @apply w-full bg-white shadow-md rounded-lg;
+  }
+  .table th, .table td {
+    @apply p-4 text-left;
+  }
+  .dialog {
+    @apply p-6 bg-white rounded-lg;
+  }
+  .form-field {
+    @apply w-full;
+  }
+  .error {
+    @apply text-red-500 text-sm mt-1;
+  }
+  .auth-container {
+    @apply flex items-center justify-center min-h-screen;
+  }
 }

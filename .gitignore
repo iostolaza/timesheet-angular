@@ -1,2 +1,9 @@
+// src/.gitignore
 node_modules/
 dist/
+.amplify
+amplify_outputs*
+amplifyconfiguration*
+terminal.md
+
+

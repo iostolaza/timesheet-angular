@@ -1,4 +1,4 @@
-// src/app/components/timesheet/subcards/timesheet-form-dialog/timesheet-form-dialog.component.ts
+// src/app/timesheet/timesheet-form/timesheet-form.component.ts
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -8,11 +8,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { TimesheetService } from './core/services/timesheet.service';
+import { TimesheetService } from '../../app/core/services/timesheet.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-timesheet-form-dialog',
+  selector: 'app-timesheet-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -25,8 +25,7 @@ import { CommonModule } from '@angular/common';
     MatSelectModule,
     CommonModule
   ],
-  templateUrl: './timesheet-form.component.html',
-  // styleUrls: ['./timesheet-form-dialog.component.css']
+  templateUrl: './timesheet-form.component.html'
 })
 export class TimesheetFormDialogComponent {
   timesheetForm: FormGroup;
@@ -36,7 +35,7 @@ export class TimesheetFormDialogComponent {
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<TimesheetFormDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private timesheetService: TimesheetService
+    @Inject(TimesheetService) private timesheetService: TimesheetService
   ) {
     this.timesheetForm = this.fb.group({
       date: [this.data.date || '', Validators.required],

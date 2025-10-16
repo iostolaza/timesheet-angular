@@ -10,31 +10,37 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { provideAuth, initializeAuth } from '@aws-amplify/auth';
-import { Amplify } from 'aws-amplify';
+import { MatSelectModule } from '@angular/material/select';
+
 import { routes } from './app.routes';
 
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: 'your-user-pool-id',
-      userPoolClientId: 'your-client-id'
+import { Amplify } from 'aws-amplify';  
+import outputs from '../../amplify_outputs.json'; 
+
+export function initializeAmplify() {
+  return () => {
+    try {
+      console.log('Initializing Amplify with outputs:', outputs);
+      Amplify.configure(outputs); 
+    } catch (error) {
+      console.error('Amplify config failed:', error);  
+      throw error; 
     }
-  }
-});
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(),
-    provideAuth(initializeAuth()),
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatTableModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatSelectModule
   ]
 };
