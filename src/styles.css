@@ -26,3 +26,12 @@ table {
 th, td {
   @apply p-4 text-left;
 }
+
+
+
+
+
+git remote add origin https://github.com/iostolaza/timesheet-app.git
+git add .
+git commit -m "Initial commit of enhanced timesheet app"
+git push -u origin main.  
