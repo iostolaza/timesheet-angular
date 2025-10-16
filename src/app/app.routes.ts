@@ -1,7 +1,6 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
-import { AuthComponent } from '../app/features/auth/auth.component';
-
+import { AuthComponent } from '../app/timesheet/auth/auth.component';
 import { StartPageComponent } from '../timesheet/start-page/start-page.component';
 import { CalendarPageComponent } from '../timesheet/calendar-page/calendar-page.component';
 import { ReviewPageComponent } from '../timesheet/review-page/review-page.component';

@@ -1,6 +1,6 @@
 // src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { Amplify, Auth } from 'aws-amplify';
+import Auth from '@aws-amplify/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class AuthService {
     }
   }
 
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<{ username: string; isManager: boolean } | null> {
     try {
       const user = await Auth.currentAuthenticatedUser();
       return {
@@ -27,7 +27,12 @@ export class AuthService {
     }
   }
 
-  async signOut() {
-    await Auth.signOut();
+  async signOut(): Promise<void> {
+    try {
+      await Auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
   }
 }

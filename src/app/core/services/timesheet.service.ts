@@ -1,21 +1,8 @@
 // src/app/core/services/timesheet.service.ts
 import { Injectable } from '@angular/core';
-import API from 'aws-amplify';
-import gql from 'graphql-tag';
-
-interface Timesheet {
-  id: string;
-  status: 'draft' | 'submitted' | 'approved' | 'rejected';
-  entries: { id: string; date: string; hours: number; description: string; accountId: string }[];
-  totalHours: number;
-  totalCost: number;
-  rejectionReason?: string;
-}
-
-interface Account {
-  id: string;
-  name: string;
-}
+import { API } from '@aws-amplify/api';
+import { gql } from 'graphql-tag';
+import { Timesheet, TimesheetEntry, Account } from '../models/timesheet.model';
 
 @Injectable({
   providedIn: 'root'
@@ -54,10 +41,12 @@ export class TimesheetService {
               hours
               description
               accountId
+              document
             }
             totalHours
             totalCost
             rejectionReason
+            owner
           }
         }
       `;
@@ -69,7 +58,7 @@ export class TimesheetService {
     }
   }
 
-  async addEntry(entry: { date: string; hours: number; description: string; accountId: string; timesheetId: string }) {
+  async addEntry(entry: TimesheetEntry): Promise<void> {
     try {
       const mutation = gql`
         mutation AddTimesheetEntry($input: TimesheetEntryInput!) {
@@ -80,6 +69,7 @@ export class TimesheetService {
             description
             accountId
             timesheetId
+            document
           }
         }
       `;
@@ -90,7 +80,7 @@ export class TimesheetService {
     }
   }
 
-  async submitTimesheet(timesheetId: string) {
+  async submitTimesheet(timesheetId: string): Promise<void> {
     try {
       const mutation = gql`
         mutation SubmitTimesheet($id: ID!) {
@@ -107,7 +97,7 @@ export class TimesheetService {
     }
   }
 
-  async approveTimesheet(timesheetId: string, entries: any[]) {
+  async approveTimesheet(timesheetId: string, entries: TimesheetEntry[]): Promise<void> {
     try {
       const mutation = gql`
         mutation ApproveTimesheet($id: ID!, $entries: [TimesheetEntryInput!]!) {
@@ -124,7 +114,7 @@ export class TimesheetService {
     }
   }
 
-  async rejectTimesheet(timesheetId: string, rejectionReason: string) {
+  async rejectTimesheet(timesheetId: string, rejectionReason: string): Promise<void> {
     try {
       const mutation = gql`
         mutation RejectTimesheet($id: ID!, $rejectionReason: String!) {
