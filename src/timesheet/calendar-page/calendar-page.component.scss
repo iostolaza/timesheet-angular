@@ -1,5 +1,18 @@
+
+// src/timesheet/calendar-page/calendar-page.component.scss
+
+@import 'angular-calendar/css/angular-calendar.css';
+
 .cal-hour-segment {
   cursor: pointer;
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  background-color: #fff; /* bg-white */
+  min-height: 40px; /* Ensure segments are visible */
+  box-sizing: border-box;
+}
+
+.cal-hour-segment:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
 }
 
 .disable-hover {
@@ -7,6 +20,43 @@
 }
 
 .table {
-  width: 100%;
-  margin-top: 20px;
+  @apply w-full mt-6 bg-white shadow-md rounded-lg;
+}
+
+.table th, .table td {
+  @apply p-4 text-left border-b border-gray-200;
+}
+
+.cal-week-view {
+  @apply bg-white border border-gray-200 rounded-lg p-2;
+  min-height: 400px; /* Ensure grid visibility */
+  overflow-x: auto; /* Responsive */
+}
+
+.cal-event {
+  @apply bg-blue-600 text-white rounded px-2 py-1 text-sm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-time {
+  @apply text-xs text-gray-700;
+}
+
+.cal-header {
+  @apply bg-gray-50 font-semibold p-2 border-b border-gray-200;
+}
+
+.btn-group {
+  @apply flex gap-2;
+}
+
+@media (max-width: 768px) {
+  .cal-week-view {
+    @apply text-xs;
+  }
+  .cal-event {
+    @apply text-xs px-1 py-0.5;
+  }
 }

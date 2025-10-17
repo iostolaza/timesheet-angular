@@ -26,6 +26,20 @@ export class TimesheetService {
   }
 
   async getTimesheets(status?: string): Promise<Timesheet[]> {
+    // Filter out invalid entries on load
+    this.timesheets = this.timesheets.map(timesheet => ({
+      ...timesheet,
+      entries: timesheet.entries.filter(entry => {
+        const start = parse(`${entry.date} ${entry.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+        const end = parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+        if (end <= start) {
+          console.warn('Removing invalid timesheet entry from storage:', { entry });
+          return false;
+        }
+        return true;
+      })
+    }));
+    localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
     return status ? this.timesheets.filter(t => t.status === status) : this.timesheets;
   }
 
@@ -37,12 +51,18 @@ export class TimesheetService {
     const end = parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
     const hours = differenceInHours(end, start);
     
+    if (hours <= 0) {
+      console.error('Invalid timesheet entry: endTime is before or equal to startTime', { entry });
+      throw new Error('End time must be after start time');
+    }
+    
     const newEntry: TimesheetEntry = { ...entry, id: uuidv4(), hours };
     timesheet.entries.push(newEntry);
     timesheet.totalHours = timesheet.entries.reduce((sum, e) => sum + e.hours, 0);
     
     const validationErrors = this.validateHours(timesheet);
     if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
       throw new Error(validationErrors.join('\n'));
     }
     
@@ -57,13 +77,20 @@ export class TimesheetService {
     
     const start = parse(`${entry.date} ${entry.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
     const end = parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
-    entry.hours = differenceInHours(end, start);
+    const hours = differenceInHours(end, start);
     
+    if (hours <= 0) {
+      console.error('Invalid timesheet entry: endTime is before or equal to startTime', { entry });
+      throw new Error('End time must be after start time');
+    }
+    
+    entry.hours = hours;
     timesheet.entries[index] = entry;
     timesheet.totalHours = timesheet.entries.reduce((sum, e) => sum + e.hours, 0);
     
     const validationErrors = this.validateHours(timesheet);
     if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors);
       throw new Error(validationErrors.join('\n'));
     }
     
@@ -81,7 +108,15 @@ export class TimesheetService {
     const timesheet = this.timesheets.find(t => t.id === timesheetId);
     if (!timesheet) throw new Error('Timesheet not found');
     timesheet.status = 'approved';
-    timesheet.entries = entries;
+    timesheet.entries = entries.filter(entry => {
+      const start = parse(`${entry.date} ${entry.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+      const end = parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+      if (end <= start) {
+        console.warn('Removing invalid timesheet entry during approval:', { entry });
+        return false;
+      }
+      return true;
+    });
     localStorage.setItem('timesheets', JSON.stringify(this.timesheets));
   }
 

@@ -10,12 +10,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-// Update the import path below if the actual location is different
-import { TimesheetService } from '../../app/core/services/timesheet.service';
 import { CommonModule } from '@angular/common';
+import { TimesheetService } from '../../app/core/services/timesheet.service';
+import { TimesheetEntry, Account } from '../../app/core/models/timesheet.model';
 
 @Component({
-  selector: 'app-timesheet-form',
+  selector: 'app-timesheet-form-dialog',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -28,22 +28,67 @@ import { CommonModule } from '@angular/common';
     MatSelectModule,
     CommonModule
   ],
-  templateUrl: './timesheet-form.component.html'
+  template: `
+    <h2 mat-dialog-title>{{ data.mode === 'add' ? 'Add Timesheet Entry' : 'Edit Timesheet Entry' }}</h2>
+    <mat-dialog-content>
+      <form [formGroup]="timesheetForm">
+        <mat-form-field class="form-field">
+          <mat-label>Date</mat-label>
+          <input matInput formControlName="date" type="date" required>
+          <mat-error *ngIf="timesheetForm.get('date')?.hasError('required')">Date is required</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field">
+          <mat-label>Start Time</mat-label>
+          <input matInput formControlName="startTime" type="time" required>
+          <mat-error *ngIf="timesheetForm.get('startTime')?.hasError('required')">Start time is required</mat-error>
+          <mat-error *ngIf="timesheetForm.get('startTime')?.hasError('pattern')">Invalid time format</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field">
+          <mat-label>End Time</mat-label>
+          <input matInput formControlName="endTime" type="time" required>
+          <mat-error *ngIf="timesheetForm.get('endTime')?.hasError('required')">End time is required</mat-error>
+          <mat-error *ngIf="timesheetForm.get('endTime')?.hasError('pattern')">Invalid time format</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field">
+          <mat-label>Hours</mat-label>
+          <input matInput formControlName="hours" readonly>
+          <mat-error *ngIf="timesheetForm.get('hours')?.hasError('required')">Hours are required</mat-error>
+          <mat-error *ngIf="timesheetForm.get('hours')?.hasError('min')">Hours must be positive</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field">
+          <mat-label>Account</mat-label>
+          <mat-select formControlName="accountId" required>
+            <mat-option *ngFor="let account of accounts" [value]="account.id">{{ account.name }}</mat-option>
+          </mat-select>
+          <mat-error *ngIf="timesheetForm.get('accountId')?.hasError('required')">Account is required</mat-error>
+        </mat-form-field>
+        <mat-form-field class="form-field">
+          <mat-label>Description</mat-label>
+          <input matInput formControlName="description" required>
+          <mat-error *ngIf="timesheetForm.get('description')?.hasError('required')">Description is required</mat-error>
+        </mat-form-field>
+      </form>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+      <button mat-button (click)="onCancel()">Cancel</button>
+      <button mat-button color="primary" (click)="onSubmit()" [disabled]="!timesheetForm.valid">Save</button>
+    </mat-dialog-actions>
+  `
 })
 export class TimesheetFormDialogComponent {
   timesheetForm: FormGroup;
-  accounts: { id: string; name: string }[] = [];
+  accounts: Account[] = [];
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<TimesheetFormDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'add' | 'edit', date?: string, startTime?: string, endTime?: string, entry?: TimesheetEntry },
     private timesheetService: TimesheetService
   ) {
     this.timesheetForm = this.fb.group({
-      date: [this.data.date || '', Validators.required],
-      startTime: [this.data.entry?.startTime || '', Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)],
-      endTime: [this.data.entry?.endTime || '', Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)],
+      date: [this.data.date || this.data.entry?.date || '', Validators.required],
+      startTime: [this.data.startTime || this.data.entry?.startTime || '', [Validators.required, Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+      endTime: [this.data.endTime || this.data.entry?.endTime || '', [Validators.required, Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
       hours: [{ value: this.data.entry?.hours || '', disabled: true }, [Validators.required, Validators.min(0)]],
       description: [this.data.entry?.description || '', Validators.required],
       accountId: [this.data.entry?.accountId || '', Validators.required]

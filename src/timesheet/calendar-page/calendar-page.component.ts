@@ -13,7 +13,8 @@ import {
   CalendarWeekViewComponent,
   CalendarDatePipe,
   provideCalendar,
-  DateAdapter
+  DateAdapter,
+  CalendarEventTitleFormatter
 } from 'angular-calendar';
 import { WeekViewHourSegment } from 'calendar-utils';
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
@@ -78,15 +79,23 @@ export class CalendarPageComponent implements OnInit {
   async loadTimesheetEntries() {
     const timesheets = await this.timesheetService.getTimesheets('draft');
     const entries: TimesheetEntry[] = timesheets.flatMap((ts: Timesheet) => ts.entries || []);
-    this.events = await Promise.all(
-      entries.map(async (entry: TimesheetEntry) => ({
+    const eventsPromises = entries.map(async (entry: TimesheetEntry) => {
+      const start = parse(`${entry.date} ${entry.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+      const end = parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+      if (end <= start) {
+        console.warn('Skipping invalid event: end time is before or equal to start time', { entry });
+        return null;
+      }
+      return {
         id: entry.id,
         title: `${await this.timesheetService.getAccountName(entry.accountId)}: ${entry.hours} hours - ${entry.description}`,
-        start: parse(`${entry.date} ${entry.startTime}`, 'yyyy-MM-dd HH:mm', new Date()),
-        end: parse(`${entry.date} ${entry.endTime}`, 'yyyy-MM-dd HH:mm', new Date()),
+        start,
+        end,
         meta: { entry }
-      }))
-    );
+      };
+    });
+    this.events = (await Promise.all(eventsPromises)).filter((event): event is CalendarEvent => event !== null);
+    console.log('Loaded events:', this.events);
     this.refresh();
   }
 
@@ -94,6 +103,7 @@ export class CalendarPageComponent implements OnInit {
     if (this.currentTimesheetId) {
       this.timesheetService.getDailySubtotals(this.currentTimesheetId).subscribe((subtotals: { date: string, accountId: number, accountName: string, hours: number }[]) => {
         this.subtotalsDataSource.data = subtotals;
+        console.log('Loaded subtotals:', subtotals);
         this.refresh();
       });
     }
@@ -118,6 +128,13 @@ export class CalendarPageComponent implements OnInit {
         finalize(() => {
           delete dragToSelectEvent.meta.tmpEvent;
           this.dragToCreateActive = false;
+          if (dragToSelectEvent.end && dragToSelectEvent.end <= dragToSelectEvent.start) {
+            console.warn('Invalid drag event: end time is before or equal to start time', dragToSelectEvent);
+            this.events = this.events.filter(e => e !== dragToSelectEvent);
+            alert('End time must be after start time');
+            this.refresh();
+            return;
+          }
           this.openTimesheetForm(dragToSelectEvent);
           this.refresh();
         }),
@@ -143,13 +160,18 @@ export class CalendarPageComponent implements OnInit {
         mode: 'add',
         date: format(event.start, 'yyyy-MM-dd'),
         startTime: format(event.start, 'HH:mm'),
-        endTime: event.end ? format(event.end, 'HH:mm') : undefined
+        endTime: event.end ? format(event.end, 'HH:mm') : '17:00'
       }
     });
 
     dialogRef.afterClosed().subscribe(async (result: Partial<TimesheetEntry>) => {
       if (result && result.date && result.startTime && result.endTime && result.accountId && result.description) {
         try {
+          const start = parse(`${result.date} ${result.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+          const end = parse(`${result.date} ${result.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+          if (end <= start) {
+            throw new Error('End time must be after start time');
+          }
           await this.timesheetService.addEntry({
             timesheetId: this.currentTimesheetId!,
             date: result.date,
@@ -157,14 +179,12 @@ export class CalendarPageComponent implements OnInit {
             endTime: result.endTime,
             description: result.description,
             accountId: result.accountId,
-            hours: differenceInHours(
-              parse(`${result.date} ${result.endTime}`, 'yyyy-MM-dd HH:mm', new Date()),
-              parse(`${result.date} ${result.startTime}`, 'yyyy-MM-dd HH:mm', new Date())
-            )
+            hours: differenceInHours(end, start)
           });
           await this.loadTimesheetEntries();
           await this.loadSubtotals();
         } catch (error: any) {
+          console.error('Failed to add timesheet entry:', error);
           alert(error.message);
         }
       } else {
@@ -186,6 +206,11 @@ export class CalendarPageComponent implements OnInit {
     dialogRef.afterClosed().subscribe(async (result: Partial<TimesheetEntry>) => {
       if (result && result.date && result.startTime && result.endTime && result.accountId && result.description) {
         try {
+          const start = parse(`${result.date} ${result.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+          const end = parse(`${result.date} ${result.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+          if (end <= start) {
+            throw new Error('End time must be after start time');
+          }
           await this.timesheetService.updateEntry({
             id: entry.id,
             timesheetId: this.currentTimesheetId!,
@@ -194,14 +219,12 @@ export class CalendarPageComponent implements OnInit {
             endTime: result.endTime,
             description: result.description,
             accountId: result.accountId,
-            hours: differenceInHours(
-              parse(`${result.date} ${result.endTime}`, 'yyyy-MM-dd HH:mm', new Date()),
-              parse(`${result.date} ${result.startTime}`, 'yyyy-MM-dd HH:mm', new Date())
-            )
+            hours: differenceInHours(end, start)
           });
           await this.loadTimesheetEntries();
           await this.loadSubtotals();
         } catch (error: any) {
+          console.error('Failed to update timesheet entry:', error);
           alert(error.message);
         }
       }
