@@ -1,15 +1,15 @@
 
 // src/app/timesheet/timesheet.component.ts
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { TimesheetFormDialogComponent } from './timesheet-form/timesheet-form.component';
-import { DocumentViewDialogComponent } from './document-view/document-view.component';
 import { TimesheetService } from '../app/core/services/timesheet.service';
 import { TimesheetEntry } from '../app/core/models/timesheet.model';
 import { CommonModule } from '@angular/common';
+import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-timesheet',
@@ -51,15 +51,15 @@ export class TimesheetComponent implements OnInit {
       data: { mode: 'add' }
     });
 
-    dialogRef.afterClosed().subscribe(async result => {
+    dialogRef.afterClosed().subscribe(async (result: Partial<TimesheetEntry>) => {
       if (result && this.currentTimesheetId) {
         await this.timesheetService.addEntry({
-          date: result.date,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          hours: result.hours,
-          description: result.description,
-          accountId: result.accountId,
+          date: result.date!,
+          startTime: result.startTime!,
+          endTime: result.endTime!,
+          hours: result.hours!,
+          description: result.description!,
+          accountId: result.accountId!,
           timesheetId: this.currentTimesheetId
         });
         this.loadTimesheetEntries();
@@ -73,27 +73,20 @@ export class TimesheetComponent implements OnInit {
       data: { mode: 'edit', entry }
     });
 
-    dialogRef.afterClosed().subscribe(async result => {
+    dialogRef.afterClosed().subscribe(async (result: Partial<TimesheetEntry>) => {
       if (result && this.currentTimesheetId) {
         await this.timesheetService.updateEntry({
           id: entry.id,
-          date: result.date,
-          startTime: result.startTime,
-          endTime: result.endTime,
-          hours: result.hours,
-          description: result.description,
-          accountId: result.accountId,
+          date: result.date!,
+          startTime: result.startTime!,
+          endTime: result.endTime!,
+          hours: result.hours!,
+          description: result.description!,
+          accountId: result.accountId!,
           timesheetId: this.currentTimesheetId
         });
         this.loadTimesheetEntries();
       }
-    });
-  }
-
-  openDocumentView(entry: TimesheetEntry): void {
-    this.dialog.open(DocumentViewDialogComponent, {
-      width: '500px',
-      data: { document: entry.document }
     });
   }
 }
