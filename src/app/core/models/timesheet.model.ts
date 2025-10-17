@@ -12,6 +12,8 @@ export interface Timesheet {
 export interface TimesheetEntry {
   id: string;
   date: string;
+  startTime?: string; // e.g., "09:00"
+  endTime?: string; // e.g., "12:00"
   hours: number;
   description: string;
   accountId: string;

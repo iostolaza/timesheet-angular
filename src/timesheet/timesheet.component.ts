@@ -1,7 +1,7 @@
 
 // src/app/timesheet/timesheet.component.ts
 
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
@@ -18,14 +18,11 @@ import { CommonModule } from '@angular/common';
   templateUrl: './timesheet.component.html'
 })
 export class TimesheetComponent implements OnInit {
-  displayedColumns: string[] = ['date', 'hours', 'description', 'actions'];
-  timesheetEntries: TimesheetEntry[] = [];
+  displayedColumns: string[] = ['date', 'startTime', 'endTime', 'hours', 'account', 'description', 'actions'];
+  timesheetEntries: Array<TimesheetEntry & { accountName: string }> = [];
   currentTimesheetId: string | null = null;
-
-  constructor(
-    private dialog: MatDialog,
-    @Inject(TimesheetService) private timesheetService: TimesheetService
-  ) {}
+  private timesheetService = inject(TimesheetService);
+  private dialog = inject(MatDialog);
 
   async ngOnInit() {
     this.currentTimesheetId = await this.timesheetService.createTimesheet();
@@ -34,14 +31,17 @@ export class TimesheetComponent implements OnInit {
 
   async loadTimesheetEntries() {
     const timesheets = await this.timesheetService.getTimesheets('draft');
-    this.timesheetEntries = timesheets
-      .filter(ts => ts.id === this.currentTimesheetId)
-      .flatMap(ts =>
-        (ts.entries || []).map(entry => ({
-          ...entry,
-          timesheetId: ts.id
-        }))
-      );
+    this.timesheetEntries = await Promise.all(
+      timesheets
+        .filter(ts => ts.id === this.currentTimesheetId)
+        .flatMap(ts =>
+          (ts.entries || []).map(async entry => ({
+            ...entry,
+            timesheetId: ts.id,
+            accountName: await this.timesheetService.getAccountName(entry.accountId)
+          }))
+        )
+    );
   }
 
   openAddDialog(): void {
@@ -55,6 +55,8 @@ export class TimesheetComponent implements OnInit {
       if (result && this.currentTimesheetId) {
         await this.timesheetService.addEntry({
           date: result.date,
+          startTime: result.startTime,
+          endTime: result.endTime,
           hours: result.hours,
           description: result.description,
           accountId: result.accountId,
@@ -74,8 +76,10 @@ export class TimesheetComponent implements OnInit {
     dialogRef.afterClosed().subscribe(async result => {
       if (result && this.currentTimesheetId) {
         await this.timesheetService.updateEntry({
-          id: entry.id, // Use existing ID
+          id: entry.id,
           date: result.date,
+          startTime: result.startTime,
+          endTime: result.endTime,
           hours: result.hours,
           description: result.description,
           accountId: result.accountId,

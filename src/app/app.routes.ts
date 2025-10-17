@@ -12,6 +12,8 @@ import { inject } from '@angular/core';
 import { map } from 'rxjs';
 import { Router } from '@angular/router';
 
+import { AccountListComponent } from '../financial/account-list/account-list.component';
+import { LedgerViewComponent } from '../financial/ledger-view/ledger-view.component';
 
 const authGuard: CanActivateFn = () => {
   const router = inject(Router);
@@ -40,6 +42,21 @@ export const routes: Routes = [
   {
     path: 'timesheet',
     component: TimesheetComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'accounts',
+    component: AccountListComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'ledger',
+    component: LedgerViewComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'ledger/:id',
+    component: LedgerViewComponent,
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: 'auth' }

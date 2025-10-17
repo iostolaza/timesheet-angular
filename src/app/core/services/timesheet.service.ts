@@ -1,4 +1,6 @@
+
 // src/app/core/services/timesheet.service.ts
+
 import { Injectable } from '@angular/core';
 import { v4 as uuidv4 } from 'uuid';
 import { Timesheet, TimesheetEntry, Account } from '../models/timesheet.model';
@@ -69,5 +71,10 @@ export class TimesheetService {
 
   async getAccounts(): Promise<Account[]> {
     return this.accounts;
+  }
+
+  async getAccountName(accountId: string): Promise<string> {
+    const account = this.accounts.find(a => a.id === accountId);
+    return account ? account.name : 'Unknown';
   }
 }
